@@ -1,58 +1,69 @@
 # player.py
-class Player:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.width = 32
-        self.height = 32
-        self.vx = 0          # Horizontal velocity
-        self.vy = 0          # Vertical velocity
-        self.speed = 5
-        self.jump_power = -10
-        self.gravity = 0.5
+def update(self, level):  # Pass level as parameter
+    keys = pygame.key.get_pressed()
+    if keys[K_LEFT]:
+        self.vx = -self.speed
+    elif keys[K_RIGHT]:
+        self.vx = self.speed
+    else:
+        self.vx = 0
+    if keys[K_SPACE] and self.on_ground:
+        self.vy = self.jump_power
         self.on_ground = False
+    
+    # Horizontal movement
+    self.x += self.vx
+    self.check_collisions_x(level)
+    
+    # Vertical movement
+    self.vy += self.gravity
+    self.y += self.vy
+    self.check_collisions_y(level)
 
-    def update(self):
-        keys = pygame.key.get_pressed()
-        # Horizontal movement
-        if keys[K_LEFT]:
-            self.vx = -self.speed
-        elif keys[K_RIGHT]:
-            self.vx = self.speed
-        else:
-            self.vx = 0
-        
-        # Jumping
-        if keys[K_SPACE] and self.on_ground:
-            self.vy = self.jump_power
-            self.on_ground = False
-        
-        # Apply gravity
-        self.vy += self.gravity
-        self.x += self.vx
-        self.y += self.vy
+def check_collisions_x(self, level):
+    # Calculate tile indices player overlaps
+    left = int(self.x // 32)
+    right = int((self.x + self.width) // 32)
+    top = int(self.y // 32)
+    bottom = int((self.y + self.height) // 32)
+    
+    for y in range(top, bottom + 1):
+        for x in range(left, right + 1):
+            if 0 <= x < level.width and 0 <= y < level.height:
+                if level.tiles[y][x] == 1:  # Solid tile
+                    if self.vx > 0:  # Moving right
+                        self.x = x * 32 - self.width
+                    elif self.vx < 0:  # Moving left
+                        self.x = (x + 1) * 32
+                    self.vx = 0
 
-        # Temporary ground collision
-        if self.y > 500 - self.height:
-            self.y = 500 - self.height
-            self.vy = 0
-            self.on_ground = True
-
-    def draw(self, screen):
-        pygame.draw.rect(screen, (255, 0, 0), (self.x, self.y, self.width, self.height))
+def check_collisions_y(self, level):
+    left = int(self.x // 32)
+    right = int((self.x + self.width) // 32)
+    top = int(self.y // 32)
+    bottom = int((self.y + self.height) // 32)
+    
+    for y in range(top, bottom + 1):
+        for x in range(left, right + 1):
+            if 0 <= x < level.width and 0 <= y < level.height:
+                if level.tiles[y][x] == 1:  # Solid tile
+                    if self.vy > 0:  # Falling
+                        self.y = y * 32 - self.height
+                        self.vy = 0
+                        self.on_ground = True
+                    elif self.vy < 0:  # Jumping
+                        self.y = (y + 1) * 32
+                        self.vy = 0
 
 # main.py
-from player import Player
-
-player = Player(100, 100)  # Start at position (100, 100)
-
 while running:
     for event in pygame.event.get():
         if event.type == QUIT:
             running = False
     
-    player.update()
+    player.update(level)  # Pass level to update
     screen.fill((0, 0, 0))
+    level.draw(screen)
     player.draw(screen)
     pygame.display.flip()
     clock.tick(60)
